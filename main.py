@@ -183,7 +183,7 @@ async def main():
 # )
     
 authenticator = stauth.Authenticate(
-    st.secrets['credentials'],
+    dict(st.secrets['credentials']['usernames']),
     st.secrets['cookie']['name'],
     st.secrets['cookie']['key'],
     st.secrets['cookie']['expiry_days']
