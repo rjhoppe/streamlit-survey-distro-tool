@@ -181,20 +181,14 @@ async def main():
 #     config['cookie']['key'],
 #     config['cookie']['expiry_days'],
 # )
+
     
 authenticator = stauth.Authenticate(
-    st.session_state.config['credentials'],
-    st.session_state.config['cookie']['name'],
-    st.session_state.config['cookie']['key'],
-    st.session_state.config['cookie']['expiry_days']
+    dict(st.secrets['credentials']['usernames']),
+    st.secrets['cookie']['name'],
+    st.secrets['cookie']['key'],
+    st.secrets['cookie']['expiry_days']
 )
-    
-# authenticator = stauth.Authenticate(
-#     dict(st.secrets['credentials']['usernames']),
-#     st.secrets['cookie']['name'],
-#     st.secrets['cookie']['key'],
-#     st.secrets['cookie']['expiry_days']
-# )
 
 name, authentication_status, username = authenticator.login()
 
