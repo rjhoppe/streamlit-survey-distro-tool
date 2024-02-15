@@ -5,7 +5,6 @@ import os
 import yaml
 import asyncio
 from dotenv import load_dotenv
-import yaml
 from yaml.loader import SafeLoader
 from textblob import TextBlob
 from twilio.rest import Client
@@ -165,14 +164,23 @@ async def main():
     st.write('Distribution complete!')
     st.balloons()
 
-with open('../config.yaml') as file:
+with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
+# For local dev
+    
+# authenticator = stauth.Authenticate(
+#     config['credentials'],
+#     config['cookie']['name'],
+#     config['cookie']['key'],
+#     config['cookie']['expiry_days'],
+# )
+    
 authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days'],
+    dict(st.secrets['credentials']),
+    st.secrets['cookie']['name'],
+    st.secrets['cookie']['key'],
+    st.secrets['cookie']['expiry_days']
 )
 
 name, authentication_status, username = authenticator.login()
