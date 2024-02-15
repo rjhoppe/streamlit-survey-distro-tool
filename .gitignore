@@ -166,3 +166,4 @@ config.yaml
 gen_data.py
 notes.txt
 .devcontainer
+.streamlit
