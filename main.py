@@ -190,7 +190,7 @@ authenticator = stauth.Authenticate(
     st.secrets['cookie']['expiry_days']
 )
 
-name, authentication_status, username = authenticator.login()
+name, authentication_status, username = st.session_state.authenticator.login()
 
 if st.session_state["authentication_status"]:
     st.write(f'Welcome *{st.session_state["name"]}*')
