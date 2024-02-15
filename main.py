@@ -170,27 +170,27 @@ async def main():
     st.write('Distribution complete!')
     st.balloons()
 
-# with open('config.yaml') as file:
-#     config = yaml.load(file, Loader=SafeLoader)
+with open('config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 # For local dev
     
-# authenticator = stauth.Authenticate(
-#     config['credentials'],
-#     config['cookie']['name'],
-#     config['cookie']['key'],
-#     config['cookie']['expiry_days'],
-# )
-
-    
 authenticator = stauth.Authenticate(
-    dict(st.secrets['credentials']['usernames']),
-    st.secrets['cookie']['name'],
-    st.secrets['cookie']['key'],
-    st.secrets['cookie']['expiry_days']
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
 )
+    
+# authenticator = stauth.Authenticate(
+#     dict(st.secrets['credentials']['usernames']),
+#     st.secrets['cookie']['name'],
+#     st.secrets['cookie']['key'],
+#     st.secrets['cookie']['expiry_days']
+# )
+# print(dict(st.secrets['credentials']['usernames']))
 
-name, authentication_status, username = st.session_state.authenticator.login()
+name, authentication_status, username = authenticator.login()
 
 if st.session_state["authentication_status"]:
     st.write(f'Welcome *{st.session_state["name"]}*')
