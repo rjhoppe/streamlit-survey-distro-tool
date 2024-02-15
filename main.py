@@ -1,12 +1,22 @@
 import streamlit as st
 import streamlit_authenticator as stauth
 import pandas as pd
+import os
 import yaml
 import asyncio
+from dotenv import load_dotenv
 from yaml.loader import SafeLoader
 from textblob import TextBlob
+from twilio.rest import Client
 
 num_of_rows = 0
+request_num = 0
+
+load_dotenv()
+account_sid = os.getenv('TWLO_SID')
+auth_token = os.getenv('TWLO_TOKEN')
+twlo_number = os.getenv('TWLO_NUMBER')
+client = Client(account_sid, auth_token)
 
 st.set_page_config(
     page_title="HotLinks",
@@ -15,7 +25,14 @@ st.set_page_config(
 
 def calc_number_rows(df):
   num_of_rows = len(df)
-  return num_of_rows
+  if num_of_rows > 200:
+    st.write("Distribution list exceeds 100 respondents. Please reduce the list or reach out to admin.")
+  else:
+    return num_of_rows
+
+def update_btn_text(res):
+  res = st.button(label='Send Surveys')
+  return res
 
 async def check_file(df, column_validation):
   if df.columns.tolist() != ['client_name','url','message','phone_numbers']:
@@ -54,12 +71,18 @@ async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
     dedupe_validation = True
     return dedupe_validation
   
-def update_btn_text(res):
-  res = st.button(label='Send Surveys')
-  return res
-  
-async def main():
+async def distribute_sms(df, df2, num_of_rows, request_num):
+  message = df[['message']].values[0][0]
+  for row, val in df['phone_numbers'].items(): 
+    message = client.messages \
+                .create(
+                    body=message,
+                    from_=twlo_number,
+                    to=str(val)
+                )
+    st.write(message.sid)
 
+async def main():
   column_validation = False
   content_validation = False
   phone_num_validation = False
@@ -133,7 +156,13 @@ async def main():
   else:
     st.warning('Please validate your .csv file first ⛔')
 
-  st.button(label='Distribute 🚀', disabled=distribute_disabled)
+  distro = st.button(label='Distribute 🚀', disabled=distribute_disabled)
+  if distro == True:
+    df2 = df['phone_numbers']
+    print(df2)
+    await distribute_sms(df, df2, num_of_rows, request_num)
+    st.write('Distribution complete!')
+    st.balloons()
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
