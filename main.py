@@ -12,11 +12,17 @@ from twilio.rest import Client
 num_of_rows = 0
 request_num = 0
 
-load_dotenv()
-account_sid = os.getenv('TWLO_SID')
-auth_token = os.getenv('TWLO_TOKEN')
-twlo_number = os.getenv('TWLO_NUMBER')
+# load_dotenv()
+# account_sid = os.getenv('TWLO_SID')
+# auth_token = os.getenv('TWLO_TOKEN')
+# twlo_number = os.getenv('TWLO_NUMBER')
+# client = Client(account_sid, auth_token)
+
+account_sid = st.secrets['TWLO_SID']
+auth_token = st.secrets['TWLO_TOKEN']
+twlo_number = st.secrets['TWLO_NUMBER']
 client = Client(account_sid, auth_token)
+
 
 st.set_page_config(
     page_title="HotLinks",
@@ -164,8 +170,8 @@ async def main():
     st.write('Distribution complete!')
     st.balloons()
 
-with open('config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
+# with open('config.yaml') as file:
+#     config = yaml.load(file, Loader=SafeLoader)
 
 # For local dev
     
