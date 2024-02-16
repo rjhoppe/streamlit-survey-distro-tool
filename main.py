@@ -77,7 +77,7 @@ async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
     dedupe_validation = True
     return dedupe_validation
   
-async def distribute_sms(df, df2, num_of_rows, request_num):
+async def distribute_sms(df):
   message = df[['message']].values[0][0]
   for row, val in df['phone_numbers'].items(): 
     message = client.messages \
@@ -87,6 +87,8 @@ async def distribute_sms(df, df2, num_of_rows, request_num):
                     to=str(val)
                 )
     st.write(message.sid)
+  st.write('Distribution complete!')
+  st.balloons()
 
 async def main():
   column_validation = False
@@ -164,16 +166,13 @@ async def main():
 
   distro = st.button(label='Distribute 🚀', disabled=distribute_disabled)
   if distro == True:
-    df2 = df['phone_numbers']
-    print(df2)
-    await distribute_sms(df, df2, num_of_rows, request_num)
-    st.write('Distribution complete!')
-    st.balloons()
+    await distribute_sms(df)
 
-usernames = ['rickjhoppe']
-email = ['rickjhoppe@gmail.com']
-name = ['Rick Hoppe']
-passwords = ['$2b$12$RZzhe8W2sJ4nTRai7arWbubh/A63tqy7uiWMOmp36mSq48xfzwBDy']
+usernames = ['rickjhoppe', 'test']
+email = ['rickjhoppe@gmail.com', 'test@fake.com']
+name = ['Rick Hoppe', 'Mr. Test']
+passwords = ['$2b$12$RZzhe8W2sJ4nTRai7arWbubh/A63tqy7uiWMOmp36mSq48xfzwBDy', 
+             '$2b$12$RZzhe8W2sJ4nTRai7arWbubh/A63tqy7uiWMOmp36mSq48xfzwBDy']
 
 credentials = {"usernames":{}}
 
