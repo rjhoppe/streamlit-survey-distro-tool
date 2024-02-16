@@ -182,7 +182,7 @@ async def main():
 #     config['cookie']['expiry_days'],
 # )
 
-usernames = ['$2b$12$pzsLHUptiwljDinCa/sKauxdzQAnlJHSr4vOS2J9n7WWc6f1Af/KS']
+usernames = ['rickjhoppe']
 email = ['rickjhoppe@gmail.com']
 passwords = ['$2b$12$RZzhe8W2sJ4nTRai7arWbubh/A63tqy7uiWMOmp36mSq48xfzwBDy']
 
