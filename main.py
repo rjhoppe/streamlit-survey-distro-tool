@@ -182,16 +182,15 @@ async def main():
 #     config['cookie']['expiry_days'],
 # )
 
-usernames = ['$2b$12$ER.fRxXeLZVFpeyhcMnk1eb6ySTLsTatj9akfalL/TSgHRNg2bGi2']
+usernames = ['$2b$12$Ch5PpSSUfj6ABsnDfaPTZuHuUxLnbgF8typW8E7ShzTJ9t4xkbaMe']
 email = ['rickjhoppe@gmail.com']
-passwords = ['$2b$12$8pyzBOyclQtFLuM9mol5.eYNodWeitC7P7r3vi.4G.aHnzCmUZchy']
+passwords = ['$2b$12$RZzhe8W2sJ4nTRai7arWbubh/A63tqy7uiWMOmp36mSq48xfzwBDy']
 
 credentials = {"usernames":{}}
 
 for uname, name, pwd in zip(usernames, email, passwords):
     user_dict = {"name": name, "password": pwd}
     credentials["usernames"].update({uname: user_dict})
-
     
 authenticator = stauth.Authenticate(
     credentials,
