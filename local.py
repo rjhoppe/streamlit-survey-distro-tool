@@ -9,6 +9,7 @@ import time
 from yaml.loader import SafeLoader
 from textblob import TextBlob
 from twilio.rest import Client
+import psutil
 
 num_of_rows = 0
 request_num = 0

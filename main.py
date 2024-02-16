@@ -81,7 +81,7 @@ async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
     await asyncio.sleep(1)
     return dedupe_validation
   
-async def distribute_sms(df):
+def distribute_sms(df):
   message = df[['message']].values[0][0]
   st.write(message)
   for row, val in df['phone_numbers'].items():
@@ -167,7 +167,7 @@ async def main():
 
   distro = st.button(label='Distribute 🚀', disabled=distribute_disabled)
   if distro == True:
-    await distribute_sms(df)
+    distribute_sms(df)
     st.write('Distribution complete!')
     st.balloons()
 
