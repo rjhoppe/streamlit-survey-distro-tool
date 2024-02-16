@@ -170,24 +170,35 @@ async def main():
     st.write('Distribution complete!')
     st.balloons()
 
-with open('config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
 # For local dev
-    
-authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days'],
-)
+
+# with open('config.yaml') as file:
+#     config = yaml.load(file, Loader=SafeLoader)
     
 # authenticator = stauth.Authenticate(
-#     dict(st.secrets['credentials']['usernames']),
-#     st.secrets['cookie']['name'],
-#     st.secrets['cookie']['key'],
-#     st.secrets['cookie']['expiry_days']
+#     config['credentials'],
+#     config['cookie']['name'],
+#     config['cookie']['key'],
+#     config['cookie']['expiry_days'],
 # )
+
+usernames = ['$2b$12$ER.fRxXeLZVFpeyhcMnk1eb6ySTLsTatj9akfalL/TSgHRNg2bGi2']
+email = ['rickjhoppe@gmail.com']
+passwords = ['$2b$12$8pyzBOyclQtFLuM9mol5.eYNodWeitC7P7r3vi.4G.aHnzCmUZchy']
+
+credentials = {"usernames":{}}
+
+for uname, name, pwd in zip(usernames, email, passwords):
+    user_dict = {"name": name, "password": pwd}
+    credentials["usernames"].update({uname: user_dict})
+
+    
+authenticator = stauth.Authenticate(
+    credentials,
+    st.secrets['cookie']['name'],
+    st.secrets['cookie']['key'],
+    st.secrets['cookie']['expiry_days']
+)
 # print(dict(st.secrets['credentials']['usernames']))
 
 name, authentication_status, username = authenticator.login()
