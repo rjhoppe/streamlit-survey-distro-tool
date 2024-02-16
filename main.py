@@ -170,29 +170,16 @@ async def main():
     st.write('Distribution complete!')
     st.balloons()
 
-# For local dev
-
-# with open('config.yaml') as file:
-#     config = yaml.load(file, Loader=SafeLoader)
-    
-# authenticator = stauth.Authenticate(
-#     config['credentials'],
-#     config['cookie']['name'],
-#     config['cookie']['key'],
-#     config['cookie']['expiry_days'],
-# )
-
 usernames = ['rickjhoppe']
 email = ['rickjhoppe@gmail.com']
+name = ['Rick Hoppe']
 passwords = ['$2b$12$RZzhe8W2sJ4nTRai7arWbubh/A63tqy7uiWMOmp36mSq48xfzwBDy']
 
 credentials = {"usernames":{}}
 
-for uname, name, pwd in zip(usernames, email, passwords):
-    user_dict = {"name": name, "password": pwd}
+for uname, email, name, pwd in zip(usernames, email, name, passwords):
+    user_dict = {"email": email, "name": name, "password": pwd}
     credentials["usernames"].update({uname: user_dict})
-
-print(credentials)
     
 authenticator = stauth.Authenticate(
     credentials,
@@ -200,7 +187,6 @@ authenticator = stauth.Authenticate(
     st.secrets['cookie']['key'],
     st.secrets['cookie']['expiry_days']
 )
-# print(dict(st.secrets['credentials']['usernames']))
 
 name, authentication_status, username = authenticator.login()
 
