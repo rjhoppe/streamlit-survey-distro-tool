@@ -173,7 +173,7 @@ async def main():
 
   distro = st.button(label='Distribute 🚀', disabled=distribute_disabled)
   if distro == True:
-    await distribute_sms(df, df2, num_of_rows, request_num)
+    await distribute_sms(df)
 
 # For local dev
 # Need a config.yaml file, see stauth GitHub for info on contents

@@ -91,8 +91,7 @@ async def distribute_sms(df):
                     to=str(val)
                 )
     st.write(message.sid)
-  st.write('Distribution complete!')
-  st.balloons()
+  return
 
 async def main():
   column_validation = False
@@ -168,6 +167,8 @@ async def main():
   distro = st.button(label='Distribute 🚀', disabled=distribute_disabled)
   if distro == True:
     await distribute_sms(df)
+    st.write('Distribution complete!')
+    st.balloons()
 
 usernames = ['rickjhoppe', 'test']
 email = ['rickjhoppe@gmail.com', 'test@fake.com']
