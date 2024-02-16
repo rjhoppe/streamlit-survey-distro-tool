@@ -83,6 +83,7 @@ async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
   
 async def distribute_sms(df):
   message = df[['message']].values[0][0]
+  print(message)
   for row, val in df['phone_numbers'].items(): 
     message = client.messages \
                 .create(
@@ -91,6 +92,7 @@ async def distribute_sms(df):
                     to=str(val)
                 )
     st.write(message.sid)
+  await asyncio.sleep(1)
   return
 
 async def main():
