@@ -133,6 +133,7 @@ async def main():
     validate_disabled = False
     st.write('File validation successful!')
 
+  # Wrap this in st.cache_data decorator
   with open('example.csv', 'rb') as file:
     st.download_button(label='Download EX file ⬇️', file_name='example.csv', data=file, mime='text/csv', help='Downloads the example file')
   
@@ -192,7 +193,7 @@ authenticator = stauth.Authenticate(
 name, authentication_status, username = authenticator.login()
 
 if st.session_state["authentication_status"]:
-    st.write(f'Welcome *{st.session_state["name"]}*')
+    st.write(f'Welcome back, *{st.session_state["name"]}*')
     st.header('HotLinks 🔥🥵🚒', divider="rainbow")
     asyncio.run(main())
 elif st.session_state["authentication_status"] is False:
