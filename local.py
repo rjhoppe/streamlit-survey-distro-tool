@@ -22,7 +22,66 @@ auth_token = os.getenv('TWLO_TOKEN')
 twlo_number = os.getenv('TWLO_NUMBER')
 client = Client(account_sid, auth_token)
 
-# class Database:
+class Database:
+  def __init__(self, db_name, url, conn, cursor):
+    self.name = db_name
+    self.url = url
+    self.conn = conn
+    self.cursor = cursor
+
+  def connect(self):
+    try:
+      with sqlite3.connect('database/app.db', isolation_level=None) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM messages").fetchall()
+        print('Connection successful')
+    except sqlite3.Error as e:
+      if str(e) == 'no such table: test':
+        print('Table does not exist')
+        with sqlite3.connect('database/app.db') as conn:
+          cur = conn.cursor()
+          cur.execute('''
+                      CREATE TABLE messages(
+                      created datetime default current_timestamp,
+                      uuid text,
+                      message_sid text,
+                      phone_number integer,
+                      user text
+                      )''')
+        print('Table created')
+    finally:
+      cur.close()
+      conn.commit()
+      conn.close()
+
+  # Remove files older than 30 days from database
+  def rm_data():
+    try:
+      with sqlite3.connect('database/app.db', isolation_level=None) as conn:
+        cur = conn.cursor()
+        record_count = cur.execute("SELECT COUNT (uuid) FROM messages").fetchall()
+        if record_count > 200:
+          # Remove number of oldest records where Total Numb of Records - 200
+          return        
+    except Exception as e:
+      print('Encountered error deleting records', e)
+    finally:
+      cur.close()
+      conn.commit()
+      conn.close()
+  
+  def insert_data(msg_df):
+    try:
+      with sqlite3.connect('database/app.db', isolation_level=None, check_same_thread=False) as conn:
+        cur = conn.cursor()
+        msg_df.to_sql('messages', conn, if_exists='append', index=False)
+        rows = cur.execute("SELECT * FROM messages").fetchall()
+        print(rows)
+    except sqlite3.Error as e:
+      print('Something went wrong', e)
+    finally:
+      conn.commit()
+      conn.close()
 
 
 st.set_page_config(
@@ -30,32 +89,33 @@ st.set_page_config(
     page_icon="🥵",
 )
 
-
 # Need to serialize database connections to avoid data corruption
 def check_db():
   # Need to change conn element to st.connection for prod and define db conn in secrets
   try:
-    with sqlite3.connect('database/app.db', isolation_level=None, timeout=0.01) as conn:
+    with sqlite3.connect('database/app.db', isolation_level=None) as conn:
       cur = conn.cursor()
-      rows = cur.execute("SELECT * FROM messages").fetchall()
-      print(rows)
-      print('Table and database already exist...')
-  except:
-    with sqlite3.connect('database/app.db') as conn:
-      cur = conn.cursor()
-      cur.execute('''
-                  CREATE TABLE messages(
-                  created datetime default current_timestamp,
-                  uuid text,
-                  message_sid text,
-                  phone_number integer,
-                  user text
-                  )''')
+      cur.execute("SELECT * FROM messages").fetchall()
+      print('Connection successful')
+  except sqlite3.Error as e:
+    if str(e) == 'no such table: test':
+      print('Table does not exist')
+      with sqlite3.connect('database/app.db') as conn:
+        cur = conn.cursor()
+        cur.execute('''
+                    CREATE TABLE messages(
+                    created datetime default current_timestamp,
+                    uuid text,
+                    message_sid text,
+                    phone_number integer,
+                    user text
+                    )''')
       print('Table created')
   finally:
     cur.close()
     conn.commit()
     conn.close()
+
 
     # if sqlite3.OperationalError:
     #   try:
@@ -98,10 +158,6 @@ def loadData(msg_df):
   finally:
     conn.commit()
     conn.close()
-
-# Remove files older than 30 days from database
-def rm_old_db_files():
-  return
 
 def calc_number_rows(df):
   num_of_rows = len(df)
@@ -169,31 +225,36 @@ async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
     return dedupe_validation
   
 async def distribute_sms(df):
+  # Add timeout
+  # async with asyncio.timeout(10):
   message = df[['message']].values[0][0]
   link = df[['url']].values[0][0]
   log = {}
   for row, val in df['phone_numbers'].items(): 
-    message = client.messages \
-                .create(
-                    body=message + ' ' + link,
-                    from_=twlo_number,
-                    to=str(val)
-                )
-    st.write(message.sid)
-    log = {
-      'uuid': str(uuid.uuid4()),
-      'message_sid': message.sid,
-      'phone_number': val,
-      'user': name
-    }
-  msg_df = pd.DataFrame(log, index=[0])
-  print(msg_df)
+    try:
+      message = client.messages \
+                  .create(
+                      body=message + ' ' + link,
+                      from_=twlo_number,
+                      to=str(val)
+                  )
+      st.write(message.sid)
+      log = {
+        'uuid': str(uuid.uuid4()),
+        'message_sid': message.sid,
+        'phone_number': val,
+        'user': name
+      }
+      msg_df = pd.DataFrame(log, index=[0])
+      print(msg_df)
+    except Exception as e:
+      print('Something went wrong: ', e)
+      return
   st.write('Distribution complete!')
   st.balloons()
   return msg_df
 
 async def main():
-
   column_validation = False
   content_validation = False
   phone_num_validation = False
@@ -223,12 +284,13 @@ async def main():
           content_validation = tg.create_task(parse_msg_data(df, content_validation))
           phone_num_validation = tg.create_task(parse_valid_numbers(df, phone_num_validation))
           dedupe_validation = tg.create_task(parse_dup_numbers(df, dedupe_validation, num_of_rows))
-          time.sleep(2)
+          # time.sleep(2)
         column_validation = column_validation.result()
         content_validation = content_validation.result()
         phone_num_validation = phone_num_validation.result()
         dedupe_validation = dedupe_validation.result()
-    except:
+    except Exception as e:
+      print('Encountered error when validating file: ', e)
       return
         
   else:
@@ -293,6 +355,7 @@ name, authentication_status, username = authenticator.login()
 if st.session_state["authentication_status"]:
     st.write(f'Welcome back, *{st.session_state["name"]}*')
     st.header('HotLinks 🔥🥵🚒', divider="rainbow")
+    # check_db()
     asyncio.run(main())
 elif st.session_state["authentication_status"] is False:
     st.error('Username/password is incorrect')
