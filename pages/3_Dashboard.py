@@ -10,5 +10,5 @@ st.set_page_config(
   initial_sidebar_state='expanded'
 )
 
-alt.themes.enable('dark')
+# alt.themes.enable('dark')
 st.header('Dashboard', divider='rainbow')
