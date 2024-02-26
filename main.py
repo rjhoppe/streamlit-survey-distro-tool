@@ -152,6 +152,7 @@ async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
     st.warning(f'❌ Something went wrong: {e}')
   
 async def distribute_sms(df, *args):
+  time.sleep(2)
   message = df[['message']].values[0][0]
   link = df[['url']].values[0][0]
   log = {}
