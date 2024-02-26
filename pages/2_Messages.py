@@ -12,13 +12,12 @@ st.set_page_config(
 
 def load_db_data(msg_data_df):
   query = "SELECT * FROM messages"
-  
   try: 
     with sqlite3.connect('database/app.db', isolation_level=None, check_same_thread=False) as conn:
       # cur = conn.cursor()
       msg_data_df = pd.read_sql_query(query, conn)
   except sqlite3.Error as e:
-    print('Encountered error retrieving messages from db: ', e)
+    print(f'Encountered error retrieving messages from db: {e}')
   finally:
     conn.commit()
     conn.close()

@@ -1,4 +1,4 @@
-[runner]
+# [runner]
 
-# Default: true
-fastReruns = false
+# # Default: true
+# fastReruns = false

@@ -2,17 +2,17 @@ import streamlit as st
 import streamlit_authenticator as stauth
 import pandas as pd
 import os
-import yaml
 import asyncio
 import sqlite3
 # import sqlalchemy
 import uuid
 import time
-from dotenv import load_dotenv
+import yaml
 from yaml.loader import SafeLoader
+from dotenv import load_dotenv
 # from spellchecker import SpellChecker
-from autocorrect import Speller
-from textblob import TextBlob
+# from autocorrect import Speller
+# from textblob import TextBlob
 from twilio.rest import Client
 
 num_of_rows = 0
@@ -32,86 +32,30 @@ twlo_number = os.getenv('TWLO_NUMBER')
 client = Client(account_sid, auth_token)
 
 class Database:
-  def __init__(self, db_name, url, conn, cursor):
+  def __init__(self, db_name, url, conn, cur):
     self.name = db_name
     self.url = url
     self.conn = conn
-    self.cursor = cursor
+    self.cur = cur
 
-  def connect(self):
-    try:
-      with sqlite3.connect('database/app.db', isolation_level=None) as conn:
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM messages").fetchall()
-        print('Connection successful')
-    except sqlite3.Error as e:
-      if str(e) == 'no such table: test':
-        print('Table does not exist')
-        with sqlite3.connect('database/app.db') as conn:
-          cur = conn.cursor()
-          cur.execute('''
-                      CREATE TABLE messages(
-                      created datetime default current_timestamp,
-                      uuid text,
-                      message_sid text,
-                      phone_number integer,
-                      user text
-                      )''')
-        print('Table created')
-    finally:
-      cur.close()
-      conn.commit()
-      conn.close()
-
-  # Remove files older than 30 days from database - not tested
-  def rm_data():
-    query = "DELETE FROM messages WHERE created <= strftime('%s', datetime('now', '-30 day'));"
-    try:
-      with sqlite3.connect('database/app.db', isolation_level=None) as conn:
-        cur = conn.cursor()
-        cur.execute(query)
-    except Exception as e:
-      print('Encountered error deleting records', e)
-    finally:
-      cur.close()
-      conn.commit()
-      conn.close()
-  
-  def insert_data(msg_df):
-    try:
-      with sqlite3.connect('database/app.db', isolation_level=None, check_same_thread=False) as conn:
-        cur = conn.cursor()
-        msg_df.to_sql('messages', conn, if_exists='append', index=False)
-        rows = cur.execute("SELECT * FROM messages").fetchall()
-        print(rows)
-    except sqlite3.Error as e:
-      print('Something went wrong', e)
-    finally:
-      conn.commit()
-      conn.close()
-
-# Need to serialize database connections to avoid data corruption
 def check_db():
-  # Need to change conn element to st.connection for prod and define db conn in secrets
+# Need to change conn element to st.connection for prod and define db conn in secrets
   try:
-    with sqlite3.connect('database/app.db', isolation_level=None) as conn:
+    with sqlite3.connect('database/app.db') as conn:
       cur = conn.cursor()
-      cur.execute("SELECT * FROM messages").fetchall()
-      print('Connection successful')
-  except sqlite3.Error as e:
-    if str(e) == 'no such table: test':
-      print('Table does not exist')
-      with sqlite3.connect('database/app.db') as conn:
-        cur = conn.cursor()
-        cur.execute('''
-                    CREATE TABLE messages(
-                    created datetime default current_timestamp,
-                    uuid text,
-                    message_sid text,
-                    phone_number integer,
-                    user text
-                    )''')
-      print('Table created')
+      cur.execute('''
+                  CREATE TABLE IF NOT EXISTS messages(
+                  created datetime default current_timestamp,
+                  uuid text,
+                  message_sid text,
+                  phone_number integer,
+                  user text,
+                  status text,
+                  error_msg text
+                  )''')
+      print('DB configured')
+  except sqlite3.OperationalError as e:
+    print(f'SQLite Error: {e}')
   finally:
     cur.close()
     conn.commit()
@@ -128,8 +72,105 @@ def loadData(msg_df):
   except sqlite3.Error as e:
     print('Something went wrong', e)
   finally:
+    cur.close()
     conn.commit()
     conn.close()
+
+  # Make async
+  # def connect(self):
+  #   try:
+  #     with sqlite3.connect('database/app.db', isolation_level=None) as conn:
+  #       cur = conn.cursor()
+  #       cur.execute("SELECT * FROM messages").fetchall()
+  #       print('Connection successful')
+  #   except sqlite3.Error as e:
+  #     if str(e) == 'no such table: test':
+  #       print('Table does not exist')
+  #       with sqlite3.connect('database/app.db') as conn:
+  #         cur.close()
+  #         cur = conn.cursor()
+  #         cur.execute('''
+  #                     CREATE TABLE messages(
+  #                     created datetime default current_timestamp,
+  #                     uuid text,
+  #                     message_sid text,
+  #                     phone_number integer,
+  #                     user text,
+  #                     status text,
+  #                     error_msg text
+  #                     )''')
+  #       print('Table created')
+  #   finally:
+  #     cur.close()
+  #     conn.commit()
+  #     conn.close()
+
+  # # Remove files older than 30 days from database - not tested
+  # # Make async
+  # def rm_data():
+  #   query = "DELETE FROM messages WHERE created <= strftime('%s', datetime('now', '-30 day'));"
+  #   try:
+  #     with sqlite3.connect('database/app.db', isolation_level=None) as conn:
+  #       cur = conn.cursor()
+  #       cur.execute(query)
+  #   except Exception as e:
+  #     print('Encountered error deleting records', e)
+  #   finally:
+  #     cur.close()
+  #     conn.commit()
+  #     conn.close()
+  
+  # def insert_data(msg_df):
+  #   try:
+  #     with sqlite3.connect('database/app.db', isolation_level=None, check_same_thread=False) as conn:
+  #       cur = conn.cursor()
+  #       msg_df.to_sql('messages', conn, if_exists='append', index=False)
+  #       rows = cur.execute("SELECT * FROM messages").fetchall()
+  #       print(rows)
+  #   except sqlite3.Error as e:
+  #     print('Something went wrong', e)
+  #   finally:
+  #     conn.commit()
+  #     conn.close()
+
+# Need to serialize database connections to avoid data corruption
+# def check_db():
+#   # Need to change conn element to st.connection for prod and define db conn in secrets
+#     try:
+#       with sqlite3.connect('database/app.db') as conn:
+#         cur = conn.cursor()
+#         cur.execute('''
+#                     CREATE TABLE IF NOT EXISTS messages(
+#                     created datetime default current_timestamp,
+#                     uuid text,
+#                     message_sid text,
+#                     phone_number integer,
+#                     user text,
+#                     status text,
+#                     error_msg text
+#                     )''')
+#         print('DB configured')
+#     except sqlite3.OperationalError as e:
+#       print(f'SQLite Error: {e}')
+#     finally:
+#       cur.close()
+#       conn.commit()
+#       conn.close()
+
+# # Need to serialize database connections to avoid data corruption
+# def loadData(msg_df):
+#   try:
+#     with sqlite3.connect('database/app.db', isolation_level=None, check_same_thread=False) as conn:
+#       cur = conn.cursor()
+#       msg_df.to_sql('messages', conn, if_exists='append', index=False)
+#       rows = cur.execute("SELECT * FROM messages").fetchall()
+#       print(rows)
+#   except sqlite3.Error as e:
+#     print('Something went wrong', e)
+#   finally:
+#     cur.close()
+#     conn.commit()
+#     conn.close()
 
 def calc_number_rows(df):
   num_of_rows = len(df)
@@ -148,6 +189,8 @@ def load_example_csv():
 async def check_file(df, column_validation):
   try:
     async with asyncio.timeout(5):
+      # Test timeout
+      # time.sleep(10)
       if df.columns.tolist() != ['client_name','url','message','phone_numbers']:
         st.warning('❌ Column headers incorrect. Check spelling and order.')
       elif len(df['client_name']) > 1:
@@ -164,37 +207,7 @@ async def check_file(df, column_validation):
   except asyncio.TimeoutError:
     st.warning('❌ Application timeout, try again later.')
   except Exception as e:
-    st.warning('❌ Something went wrong: ', e)
-
-# async def spellcheck(text, content_validation):
-#   async with asyncio.timeout(5):
-#     try:
-#       text = TextBlob(text)
-#       for word in text:
-#         if word.correct() != word:
-#           st.warning('❌ Spelling errors detected in message. Correct these errors and reupload')
-#           st.write(f'Recommended spelling for {word}: {word.correct()}')
-#           content_validation = True
-#           return content_validation
-#         else:
-#           st.write('✅ Message content spellchecked.')
-#           content_validation = True
-#           return content_validation
-#     except asyncio.TimeoutError:
-#       st.warning('❌ Application timeout, try again later.')
-#     except Exception as e:
-#       st.warning('❌ Something went wrong: ', e)
-
-# @spellcheck
-# async def parse_msg_data(df, content_validation):
-#   try:
-#     async with asyncio.timeout(5):
-#       text = TextBlob(df[['message']].values[0][0])
-#       content_validation = spellcheck(text, content_validation)
-#   except asyncio.TimeoutError:
-#     st.warning('❌ Application timeout, try again later.')
-#   except Exception as e:
-#     st.warning('❌ Something went wrong: ', e)
+    st.warning(f'❌ Something went wrong: {e}')
 
 async def parse_msg_data(df, content_validation):
   try:
@@ -211,10 +224,8 @@ async def parse_msg_data(df, content_validation):
   except asyncio.TimeoutError:
     st.warning('❌ Application timeout, try again later.')
   except Exception as e:
-    st.warning('❌ Something went wrong: ', e)
-
+    st.warning(f'❌ Something went wrong: {e}')
     
-
 async def parse_valid_numbers(df, phone_num_validation):
   try:
     async with asyncio.timeout(5):
@@ -230,7 +241,7 @@ async def parse_valid_numbers(df, phone_num_validation):
   except asyncio.TimeoutError:
     st.warning('❌ Application timeout, try again later.')
   except Exception as e:
-    st.warning('❌ Something went wrong: ', e)
+    st.warning(f'❌ Something went wrong: {e}')
 
 async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
   try:
@@ -246,14 +257,14 @@ async def parse_dup_numbers(df, dedupe_validation, num_of_rows):
   except asyncio.TimeoutError:
     st.warning('❌ Application timeout, try again later.')
   except Exception as e:
-    st.warning('❌ Something went wrong: ', e)
+    st.warning(f'❌ Something went wrong: {e}')
   
-async def distribute_sms(df):
+async def distribute_sms(df, *args):
   message = df[['message']].values[0][0]
   link = df[['url']].values[0][0]
   log = {}
-  try:
-    for row, val in df['phone_numbers'].items(): 
+  for row, val in df['phone_numbers'].items(): 
+    try:
       message = client.messages \
                   .create(
                       body=message + ' ' + link,
@@ -265,22 +276,35 @@ async def distribute_sms(df):
         'uuid': str(uuid.uuid4()),
         'message_sid': message.sid,
         'phone_number': val,
-        'user': name
+        'user': name,
+        'status': 'success',
+        'error_msg': 'N/A'
       }
       msg_df = pd.DataFrame(log, index=[0])
-      print(msg_df)
-  except Exception as e:
-    st.warning('❌ Something went wrong: ', e)
-    return
+    except Exception as e:
+      st.warning(f'❌ Something went wrong: {e}')
+      log = {
+        'uuid': str(uuid.uuid4()),
+        'message_sid': 'N/A',
+        'phone_number': val,
+        'user': name,
+        'status': 'failed',
+        'error_msg': e
+      }
+      msg_df = pd.DataFrame(log, index=[0])
   st.write('Distribution complete!')
   st.balloons()
   return msg_df
 
 async def main():
+
+  # SQLite = Database(db_name='st-app-db', url='', conn='', cur='')
+
   column_validation = False
   content_validation = False
   phone_num_validation = False
   dedupe_validation = False
+  distro_success = False
 
   validate_disabled = True
   review_disabled = True
@@ -312,13 +336,13 @@ async def main():
         phone_num_validation = phone_num_validation.result()
         dedupe_validation = dedupe_validation.result()
     except Exception as e:
-      st.warning('❌ Encountered error when validating file: ', e)
+      st.warning(f'❌ Encountered error when validating file: {e}')
       return
         
   else:
     st.write('Please upload a file.')
 
-  if column_validation == True and content_validation == True and phone_num_validation == True and dedupe_validation == True:
+  if column_validation is True and content_validation is True and phone_num_validation is True and dedupe_validation is True:
     validate_disabled = False
     st.write('File upload successful!')
 
@@ -335,7 +359,7 @@ async def main():
   st.subheader('2. Validate your file')
   res = st.button(label='Validate ✅', disabled=validate_disabled)
   st.write(f'Validated: {res}')
-  if res == True:
+  if res is True:
     with st.spinner('Processing file...'):
       time.sleep(2)
       df['phone_numbers'] = df['phone_numbers'].astype(str)
@@ -351,20 +375,29 @@ async def main():
   st.write('⚠️ WARNING: All phone numbers included in the phone_numbers column will be sent an SMS message.')
   review = st.checkbox(label='Reviewed 🔎', disabled=review_disabled)
   st.write(f'Reviewed: {review}')
-  if review == True:
+  if review is True:
     distribute_disabled = False
   else:
     st.warning('Please validate your .csv file first ⛔')
 
   distro = st.button(label='Distribute 🚀', disabled=distribute_disabled)
-  if distro == True:
+  if distro is True:
     try:
-      msg_df = await asyncio.wait_for(distribute_sms(df), timeout=10)
-      loadData(msg_df)
+      msg_df = await asyncio.wait_for(distribute_sms(df), timeout=10.0)
+      distro_success = True
     except asyncio.TimeoutError:
       st.warning('Request timed out, exiting process. Do not retry.')
     except Exception as e:
-      st.warning('❌ Something went wrong: ', e)
+      st.warning(f'❌ Something went wrong: {e}')
+
+  if distro_success is True:
+    try:
+      distribute_disabled = True
+      check_db()
+      loadData(msg_df)
+      print('DB conn successful')
+    except Exception as e:
+      print(f'Something went wrong when connecting with db: {e}')
 
   # Figure out how to disable Distribute button after initial send
   # distribute_disabled = True
@@ -378,7 +411,7 @@ authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
     config['cookie']['key'],
-    # config['cookie']['expiry_days'],
+    config['cookie']['expiry_days'],
 )
 
 name, authentication_status, username = authenticator.login()
