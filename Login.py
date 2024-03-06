@@ -3,8 +3,6 @@ import streamlit_authenticator as stauth
 import pandas as pd
 import yaml
 from yaml.loader import SafeLoader
-from dotenv import load_dotenv
-from twilio.rest import Client
 
 st.set_page_config(
 	page_title="Login",
