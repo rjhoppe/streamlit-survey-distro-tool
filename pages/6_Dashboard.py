@@ -1,15 +1,15 @@
-# import streamlit as st
-# import sqlite3
-# import pandas as pd
-# import altair as alt
-# # import plotly.express as px
+import streamlit as st
+import sqlite3
+import pandas as pd
+import altair as alt
+# import plotly.express as px
 
-# st.set_page_config(
-#   page_title="Dashboard",
-#   page_icon='📈',
-#   layout='wide',
-#   initial_sidebar_state='expanded'
-# )
+st.set_page_config(
+  page_title="Dashboard",
+  page_icon='📈',
+  layout='wide',
+  initial_sidebar_state='expanded'
+)
 
 # def load_db_data(msg_data_df):
 #   query = "SELECT * FROM messages"
@@ -30,7 +30,7 @@
 
 # # alt.themes.enable('dark')
 
-# def main():
+def main():
 #   msg_data_df = pd.DataFrame()
 #   user_data_df = pd.DataFrame()
 #   msg_data_df = load_db_data(msg_data_df)
@@ -54,17 +54,22 @@
 #     data=user_data_df, 
 #     use_container_width=True
 #   )
-#   st.header('Dashboard', divider='rainbow')
+  st.header('Dashboard', divider='rainbow')
+  st.warning('⚠️ Under construction')
 #   st.line_chart(user_data_df, x='created', y='message_sid', color='user')
 #   # st.bar_chart(user_data_df, x='User', y='Message Count')
 #   st.bar_chart(msg_data_df, x='created', y='message_sid')
 #   st.bar_chart(msg_data_df, x='user', y='message_sid')
 
 
-# if st.session_state["authentication_status"]:
-#     st.write(f'Welcome back, *{st.session_state["name"]}*')
-#     main()
-# elif st.session_state["authentication_status"] is False:
-#     st.error('Username/password is incorrect')
-# elif st.session_state["authentication_status"] is None:
-#     st.warning('Please login on the App page before accessing the application')
+try: 
+  if st.session_state["authentication_status"]:
+      st.write(f'Welcome back, *{st.session_state["name"]}*')
+      main()
+  elif st.session_state["authentication_status"] is False:
+      st.error('Username/password is incorrect')
+  elif st.session_state["authentication_status"] is None:
+      st.warning('Please login on the App page before accessing the application')
+
+except KeyError:
+  st.warning('You must login on the Login page before proceeding.')

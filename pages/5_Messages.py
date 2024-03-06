@@ -39,10 +39,14 @@ def main():
     use_container_width=True
   )
 
-if st.session_state["authentication_status"]:
-    st.write(f'Welcome back, *{st.session_state["name"]}*')
-    main()
-elif st.session_state["authentication_status"] is False:
-    st.error('Username/password is incorrect')
-elif st.session_state["authentication_status"] is None:
-    st.warning('Please login on the App page before accessing the application')
+try: 
+  if st.session_state["authentication_status"]:
+      st.write(f'Welcome back, *{st.session_state["name"]}*')
+      main()
+  elif st.session_state["authentication_status"] is False:
+      st.error('Username/password is incorrect')
+  elif st.session_state["authentication_status"] is None:
+      st.warning('Please login on the App page before accessing the application')
+
+except KeyError:
+  st.warning('You must login on the Login page before proceeding.')
